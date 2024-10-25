@@ -25,7 +25,7 @@ def b_read_meas_data(filepath, delimiter='\t'):
 
 def b_linear_func(y, b):
 	x = b[0] + b[1]*y
-	dx_dy = b[1]
+	dx_dy = b[1] + 0*y
 	dx_db0 = 1 + 0*y
 	dx_db1 = y
 	dx_db = [dx_db0, dx_db1]
@@ -173,10 +173,15 @@ def b_eval(meas_data, b, b_cov, func):
 	x = f[0]
 	dx_dy = f[1]
 	dx_db = np.array(f[2]).T
-	cv = np.dot(np.dot(dx_db, b_cov), dx_db.T)
-	cv_diag = np.diag(cv)
-	ux = np.sqrt((dx_dy*uy)**2 + cv_diag)
-	return np.array([x, ux]).T
+	j = np.concatenate((np.diag(dx_dy), dx_db), axis=1)
+	y_cov = np.diag(uy**2)
+	ny = y.size
+	nb = b.size
+	cv_in = np.zeros((ny + nb, ny + nb))
+	cv_in[:ny, :ny] = y_cov
+	cv_in[ny:, ny:] = b_cov
+	x_cov = np.dot(np.dot(j, cv_in), j.T)
+	return x, x_cov
 
 def b_disp_cal_data(cal_data):
 	print('Calibration data:')
@@ -194,16 +199,20 @@ def b_disp_cal_results(b, b_cov, b_res):
 	print('Maximum absolute value of weighted deviations')
 	print(np.max(np.abs(b_res)))
 
-def b_disp_meas_results(x, meas_data):
+def b_disp_meas_results(x, x_cov, meas_data):
 	print('Measurement data:')
-	print(np.concatenate((x, meas_data), axis=1))
+	ux = np.sqrt(np.diag(x_cov))
+	print(np.concatenate((np.array([x, ux]).T, meas_data), axis=1))
+	if (ux.size > 1):
+		print('Covariance cov(x)')
+		print(x_cov)
 
 def b_test(cal_data, meas_data, func):
 	b_disp_cal_data(cal_data)
 	b, b_cov, b_res = b_least(cal_data, func)
 	b_disp_cal_results(b, b_cov, b_res)
-	x = b_eval(meas_data, b, b_cov, func)
-	b_disp_meas_results(x, meas_data)
+	x, x_cov = b_eval(meas_data, b, b_cov, func)
+	b_disp_meas_results(x, x_cov, meas_data)
 	return b, b_cov, b_res, x
 
 def b_example_1():
