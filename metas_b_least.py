@@ -134,6 +134,19 @@ def _b_residuals(params, cal_data, b_scale, func):
 	#print(np.sum(f*f))
 	return f
 
+def _b_jacobian(params, cal_data, b_scale, func):
+	b = params*b_scale
+	ux = cal_data[:, 1]
+	y = cal_data[:, 2]
+	uy = cal_data[:, 3]
+	f = func(y, b)
+	dg_dx = -1
+	dg_dy = f[1]
+	ug = np.sqrt((dg_dx*ux)**2 + (dg_dy*uy)**2)
+	dh_db = np.array([dg_dbi/ug for dg_dbi in f[2]]).T
+	dh_dp = dh_db*b_scale;
+	return dh_dp
+
 def b_least(cal_data, func):
 	'''
 	b_least fits the coefficients b of the fit function func using the
@@ -143,7 +156,7 @@ def b_least(cal_data, func):
 	b_scale = np.copy(b_start)
 	b_scale[b_scale == 0] = 1
 	b_start2 = b_start/b_scale
-	b_lm = least_squares(_b_residuals, b_start2, args=(cal_data, b_scale, func), method='lm')
+	b_lm = least_squares(_b_residuals, b_start2, jac=_b_jacobian, args=(cal_data, b_scale, func), method='lm')
 	b_opt = b_lm.x*b_scale
 	b_opt_cov = b_covariance(cal_data, b_opt, func)
 	b_res = b_objective_func2(cal_data, b_opt, func)
