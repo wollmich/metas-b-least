@@ -14,7 +14,7 @@ Take a look at the following examples for the usage of the METAS B LEAST Python 
 
 ## Functions
 
-### Input functions
+### Input Functions
 
 **b_read_cal_data** reads calibration data from tabular separated text file where the first column are the `x` values, the second column are the standard uncertainties of `x`, the third column are the `y` values and the forth column are the standard uncertainties of `y`.
 
@@ -28,11 +28,13 @@ Take a look at the following examples for the usage of the METAS B LEAST Python 
 
 The following fit functions are available:
 
-- **b_linear_func** $$x = b_0 + b_1y$$
-- **b_second_order_poly** $$x = b_0 + b_1y + b_2y^2$$
-- **b_third_order_poly** $$x = b_0 + b_1y + b_2y^2 + b_3y^3$$
-- **b_power_func** $$x = b_0 + b_1y^{(1 + b_2)}$$
-- **b_exp_func** $$x = b_0 + b_1e^{b_2y}$$
+| Name                    | Function                             |
+|:------------------------|:-------------------------------------|
+| **b_linear_func**       | $$x = b_0 + b_1y$$                   |
+| **b_second_order_poly** | $$x = b_0 + b_1y + b_2y^2$$          |
+| **b_third_order_poly**  | $$x = b_0 + b_1y + b_2y^2 + b_3y^3$$ |
+| **b_power_func**        | $$x = b_0 + b_1y^{(1 + b_2)}$$       |
+| **b_exp_func**          | $$x = b_0 + b_1e^{b_2y}$$            |
 
 ### Output Functions
 
