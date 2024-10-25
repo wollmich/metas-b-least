@@ -1,5 +1,5 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024
+# Michael Wollensack METAS - 24.10.2024 - 25.10.2024
 
 import numpy as np
 from scipy.optimize import least_squares
@@ -165,10 +165,11 @@ def b_eval(meas_data, b, b_cov, func):
 	ux = np.sqrt((dx_dy*uy)**2 + cv_diag)
 	return np.array([x, ux]).T
 
-def b_test(cal_data, meas_data, func):
+def b_disp_cal_data(cal_data):
 	print('Calibration data:')
 	print(cal_data)
-	b, b_cov, b_res = b_least(cal_data, func)
+
+def b_disp_cal_results(b, b_cov, b_res):
 	print('Coefficients b')
 	print(b)
 	print('Uncertainties u(b)')
@@ -179,9 +180,17 @@ def b_test(cal_data, meas_data, func):
 	print(np.sum(b_res*b_res))
 	print('Maximum absolute value of weighted deviations')
 	print(np.max(np.abs(b_res)))
-	x = b_eval(meas_data, b, b_cov, func)
+
+def b_disp_meas_results(x, meas_data):
 	print('Measurement data:')
 	print(np.concatenate((x, meas_data), axis=1))
+
+def b_test(cal_data, meas_data, func):
+	b_disp_cal_data(cal_data)
+	b, b_cov, b_res = b_least(cal_data, func)
+	b_disp_cal_results(b, b_cov, b_res)
+	x = b_eval(meas_data, b, b_cov, func)
+	b_disp_meas_results(x, meas_data)
 	return b, b_cov, b_res, x
 
 def b_example_1():
