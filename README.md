@@ -1,7 +1,7 @@
 # METAS B LEAST
 
 METAS B LEAST is a Python implementation of the B LEAST program of the [ISO 6143:2001](https://www.iso.org/standard/24665.html) norm. 
-The derivations of the different fit functions have been explicitly programmed, see [metas_b_lest.py](/metas_b_least/metas_b_least.py).
+The derivations of the different fit functions have been explicitly programmed, see [metas_b_lest.py](https://github.com/wollmich/metas-b-least/blob/main/metas_b_least/metas_b_least.py).
 The program has been verified against [METAS UncLib](https://www.metas.ch/unclib) which is using automatic differentiation.
 
 ## Examples
@@ -25,11 +25,11 @@ x, x_cov = b_eval(meas_data, b, b_cov, b_linear_func)
 b_disp_meas_results(x, x_cov, meas_data)
 ```
 
-See as well the following Jupyter Notebook examples:
+See as well the following Jupyter Notebooks:
 
-- [Example 1](/metas_b_least/Example_B_LEAST_1.ipynb)
-- [Example 2](/metas_b_least/Example_B_LEAST_2.ipynb)
-- [Example 3](/metas_b_least/Example_B_LEAST_3.ipynb)
+- [Example 1](https://github.com/wollmich/metas-b-least/blob/main/metas_b_least/Example_B_LEAST_1.ipynb)
+- [Example 2](https://github.com/wollmich/metas-b-least/blob/main/metas_b_least/Example_B_LEAST_2.ipynb)
+- [Example 3](https://github.com/wollmich/metas-b-least/blob/main/metas_b_least/Example_B_LEAST_3.ipynb)
 
 ## Functions
 
@@ -62,6 +62,14 @@ The following fit functions are available:
 **b_disp_cal_results** displays the coefficients `b`, the uncertainties of `b`, the covariance matrix of `b`, the residual and the maximum absolute value of weighted deviations.
 
 **b_disp_meas_results** displays the measurement data `x` and `meas_data`.
+
+## Source Code
+
+https://github.com/wollmich/metas-b-least/
+
+## Releases
+
+https://pypi.org/project/metas-b-least/
 
 ## Requirements
 
