@@ -6,7 +6,26 @@ The program has been verified against [METAS UncLib](https://www.metas.ch/unclib
 
 ## Examples
 
-Take a look at the following examples for the usage of the METAS B LEAST Python package:
+Take a look at the following code example for the usage of the METAS B LEAST Python package:
+
+```python
+from metas_b_least import *
+
+# Calibration and measurement data
+cal_data = b_read_cal_data(os.path.join(data_dir, 'b_least_1_data_cal.txt'))
+meas_data = b_read_meas_data(os.path.join(data_dir, 'b_least_1_data_meas.txt'))
+b_disp_cal_data(cal_data)
+
+# Fit coefficients of the fit function using the calibration data
+b, b_cov, b_res = b_least(cal_data, b_linear_func)
+b_disp_cal_results(b, b_cov, b_res)
+
+# Evaluate the fit function with the coefficients at the measurement data
+x, x_cov = b_eval(meas_data, b, b_cov, b_linear_func)
+b_disp_meas_results(x, x_cov, meas_data)
+```
+
+See as well the following Jupyter Notebook examples:
 
 - [Example 1](/metas_b_least/Example_B_LEAST_1.ipynb)
 - [Example 2](/metas_b_least/Example_B_LEAST_2.ipynb)
