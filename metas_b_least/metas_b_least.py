@@ -1,8 +1,11 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 25.10.2024
+# Michael Wollensack METAS - 24.10.2024 - 28.10.2024
 
+import os
 import numpy as np
 from scipy.optimize import least_squares
+
+data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
 def b_read_cal_data(filepath, delimiter='\t'):
 	"""
@@ -204,15 +207,15 @@ def b_test(cal_data, meas_data, func):
 
 def b_example_1():
 	print('Example B LEAST 1\n')
-	cal_data = b_read_cal_data('data/b_least_1_data_cal.txt')
-	meas_data = b_read_meas_data('data/b_least_1_data_meas.txt')
+	cal_data = b_read_cal_data(os.path.join(data_dir, 'b_least_1_data_cal.txt'))
+	meas_data = b_read_meas_data(os.path.join(data_dir, 'b_least_1_data_meas.txt'))
 	print('Linear function\n')
 	b_test(cal_data, meas_data, b_linear_func)
 
 def b_example_2():
 	print('Example B LEAST 2\n')
-	cal_data = b_read_cal_data('data/b_least_2_data_cal.txt')
-	meas_data = b_read_meas_data('data/b_least_2_data_meas.txt')
+	cal_data = b_read_cal_data(os.path.join(data_dir, 'b_least_2_data_cal.txt'))
+	meas_data = b_read_meas_data(os.path.join(data_dir, 'b_least_2_data_meas.txt'))
 	print('Linear function\n')
 	b_test(cal_data, meas_data, b_linear_func)
 	print('Second order polynomial\n')
@@ -220,8 +223,8 @@ def b_example_2():
 
 def b_example_3():
 	print('Example B LEAST 3\n')
-	cal_data = b_read_cal_data('data/b_least_3_data_cal.txt')
-	meas_data = b_read_meas_data('data/b_least_3_data_meas.txt')
+	cal_data = b_read_cal_data(os.path.join(data_dir, 'b_least_3_data_cal.txt'))
+	meas_data = b_read_meas_data(os.path.join(data_dir, 'b_least_3_data_meas.txt'))
 	print('Linear function\n')
 	b_test(cal_data, meas_data, b_linear_func)
 	print('Power function\n')
