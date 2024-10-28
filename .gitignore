@@ -1,1 +1,4 @@
 __pycache__
+/build
+/dist
+/metas_b_least.egg-info
