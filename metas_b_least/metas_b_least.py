@@ -1,9 +1,10 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 28.10.2024
+# Michael Wollensack METAS - 24.10.2024 - 04.11.2024
 
 import os
 import numpy as np
 from scipy.optimize import least_squares
+import matplotlib.pyplot as plt
 
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
@@ -157,21 +158,34 @@ def b_eval(meas_data, b, b_cov, func):
 	b_eval evaluates the fit function func with the coefficients b at the 
 	measurement data meas_data.
 	'''
+	x, y, x_cov, y_cov, xy_cov = b_eval_xy(meas_data, b, b_cov, func)
+	return x, x_cov
+
+def b_eval_xy(meas_data, b, b_cov, func):
+	'''
+	b_eval_xy evaluates the fit function func with the coefficients b at the 
+	measurement data meas_data.
+	'''
 	y = meas_data[:, 0]
 	uy = meas_data[:, 1]
+	ny = y.size
+	nb = b.size
 	f = func(y, b)
 	x = f[0]
 	dx_dy = f[1]
 	dx_db = np.array(f[2]).T
-	j = np.concatenate((np.diag(dx_dy), dx_db), axis=1)
+	jx = np.concatenate((np.diag(dx_dy), dx_db), axis=1)
+	jy = np.concatenate((np.eye(ny), np.zeros_like(dx_db)), axis=1)
+	j = np.concatenate((jx, jy), axis=0)
 	y_cov = np.diag(uy**2)
-	ny = y.size
-	nb = b.size
 	cv_in = np.zeros((ny + nb, ny + nb))
 	cv_in[:ny, :ny] = y_cov
 	cv_in[ny:, ny:] = b_cov
-	x_cov = np.dot(np.dot(j, cv_in), j.T)
-	return x, x_cov
+	cov = np.dot(np.dot(j, cv_in), j.T)
+	x_cov = cov[:ny, :ny]
+	y_cov = cov[ny:, ny:]
+	xy_cov = cov[:ny, ny:]
+	return x, y, x_cov, y_cov, xy_cov
 
 def b_disp_cal_data(cal_data):
 	print('Calibration data:')
@@ -196,6 +210,42 @@ def b_disp_meas_results(x, x_cov, meas_data):
 	if (ux.size > 1):
 		print('Covariance cov(x)')
 		print(x_cov)
+
+def b_plot(cal_data, meas_data, b, b_cov, func):
+	k = 2
+	# figure
+	fig, ax = plt.subplots()
+	# fit function
+	ymin = np.min(np.array([np.min(cal_data[:,2]), np.min(meas_data[:,0])]))
+	ymax = np.max(np.array([np.max(cal_data[:,2]), np.max(meas_data[:,0])]))
+	fy = np.linspace(ymin, ymax, num=100).reshape(-1, 1)
+	f_data = np.concatenate((fy, np.zeros_like(fy)), axis=1)
+	fx, fx_cov = b_eval(f_data, b, b_cov, func)
+	ufx = np.sqrt(np.diag(fx_cov))
+	ax.plot(fx, fy, color='blue', label='Fit x = f(y)')
+	ax.fill_betweenx(fy.flatten(), (fx-k*ufx).flatten(), (fx+k*ufx).flatten(), color='blue', alpha=0.5)
+	# calibration data
+	ax.errorbar(cal_data[:,0], cal_data[:,2], xerr=k*cal_data[:,1], yerr=k*cal_data[:,3], fmt='.', color='red', ecolor='red', capsize=3, label='Reference points')
+	for i in range(cal_data.shape[0]):
+		_b_plot_ellipse(ax, cal_data[i,0], cal_data[i,2], np.array([[cal_data[i,1]**2, 0], [0, cal_data[i,3]**2]]), 'red')
+	# measurement data
+	x, y, x_cov, y_cov, xy_cov = b_eval_xy(meas_data, b, b_cov, func)
+	ax.errorbar(x, meas_data[:,0], xerr=k*np.sqrt(np.diag(x_cov)), yerr=k*np.sqrt(np.diag(y_cov)), fmt='.', color='black', ecolor='black', capsize=3, label='Measurements points')
+	for i in range(meas_data.shape[0]):
+		_b_plot_ellipse(ax, x[i], y[i], np.array([[x_cov[i,i], xy_cov[i,i]], [xy_cov[i,i], y_cov[i,i]]]), 'black')
+	plt.xlabel('Assigned value x')
+	plt.ylabel('Instrument response y')
+	plt.legend()
+	plt.show()
+
+def _b_plot_ellipse(ax, px, py, cv, color):
+	k = 2.45
+	d, v = np.linalg.eig(k*cv)
+	t = np.linspace(0, 2*np.pi, num=100)
+	e = np.dot(v, np.diag(np.sqrt(d)))
+	f = np.array([np.cos(t), np.sin(t)])
+	g = np.dot(e, f)
+	ax.fill((g[0,:] + px).flatten(), (g[1,:] + py).flatten(), color=color, alpha=0.5)
 
 def b_test(cal_data, meas_data, func):
 	b_disp_cal_data(cal_data)
