@@ -230,7 +230,7 @@ def b_plot(cal_data, meas_data, b, b_cov, func):
 		_b_plot_ellipse(ax, cal_data[i,0], cal_data[i,2], np.array([[cal_data[i,1]**2, 0], [0, cal_data[i,3]**2]]), 'red')
 	# measurement data
 	x, y, x_cov, y_cov, xy_cov = b_eval_xy(meas_data, b, b_cov, func)
-	ax.errorbar(x, meas_data[:,0], xerr=k*np.sqrt(np.diag(x_cov)), yerr=k*np.sqrt(np.diag(y_cov)), fmt='.', color='black', ecolor='black', capsize=3, label='Measurements points')
+	ax.errorbar(x, meas_data[:,0], xerr=k*np.sqrt(np.diag(x_cov)), yerr=k*np.sqrt(np.diag(y_cov)), fmt='.', color='black', ecolor='black', capsize=3, label='Measurement points')
 	for i in range(meas_data.shape[0]):
 		_b_plot_ellipse(ax, x[i], y[i], np.array([[x_cov[i,i], xy_cov[i,i]], [xy_cov[i,i], y_cov[i,i]]]), 'black')
 	plt.xlabel('Assigned value x')
