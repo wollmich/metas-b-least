@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name='metas_b_least',
-	version='0.1.2',
+	version='0.2.0',
 	author='Michael Wollensack',
 	author_email='michael.wollensack@metas.ch',
 	description='METAS B LEAST is a Python implementation of the B LEAST program of the ISO 6143:2001 norm',
