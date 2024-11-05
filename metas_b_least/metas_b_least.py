@@ -1,10 +1,18 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 04.11.2024
+# Michael Wollensack METAS - 24.10.2024 - 05.11.2024
 
 import os
 import numpy as np
 from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
+
+try:
+	from IPython import get_ipython
+	from matplotlib_inline.backend_inline import set_matplotlib_formats
+	if get_ipython() is not None:
+		set_matplotlib_formats('svg')
+except ImportError:
+	pass # IPython is not installed, continue without setting the format
 
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
