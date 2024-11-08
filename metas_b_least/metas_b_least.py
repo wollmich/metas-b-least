@@ -1,5 +1,5 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 04.11.2024
+# Michael Wollensack METAS - 24.10.2024 - 08.11.2024
 
 import os
 import numpy as np
@@ -255,6 +255,100 @@ def b_test(cal_data, meas_data, func):
 	b_disp_meas_results(x, x_cov, meas_data)
 	return b, b_cov, b_res, x
 
+# Monte Carlo
+
+def b_sample_cal_data_mc(cal_data, nsamples=10000, seed=None):
+	if seed is not None:
+		np.random.seed(seed)
+	n = cal_data.shape[0]
+	cal_samples = np.zeros((nsamples, n, 2))
+	for j in range(n):
+		cal_samples[:, j, 0] = np.random.normal(cal_data[j, 0], cal_data[j, 1], nsamples)
+		cal_samples[:, j, 1] = np.random.normal(cal_data[j, 2], cal_data[j, 3], nsamples)
+	return cal_samples
+
+def b_sample_meas_data_mc(meas_data, nsamples=10000, seed=None):
+	if seed is not None:
+		np.random.seed(seed)
+	n = meas_data.shape[0]
+	meas_samples = np.zeros((nsamples, n))
+	for j in range(n):
+		meas_samples[:, j] = np.random.normal(meas_data[j, 0], meas_data[j, 1], nsamples)
+	return meas_samples
+
+def b_least_mc(cal_samples, func):
+	'''
+	b_least_mc fits the coefficients b_samples of the fit function func using the
+	calibration samples cal_samples and a Monte Carlo simulation.
+	'''
+	nsamples = cal_samples.shape[0]
+	cal_data = _b_cal_samples_to_cal_data(cal_samples)
+	cal_data_i = np.copy(cal_data)
+	b_start = b_least_start(cal_data, func)
+	b_scale = np.copy(b_start)
+	b_scale[b_scale == 0] = 1
+	b_start2 = b_start/b_scale
+	b_samples = np.zeros((nsamples, b_start.size))
+	for i in range(nsamples):
+		cal_data_i[:, 0] = cal_samples[i, :, 0]
+		cal_data_i[:, 2] = cal_samples[i, :, 1]
+		b_i_lm = least_squares(_b_residuals, b_start2, args=(cal_data_i, b_scale, func), method='lm')
+		b_samples[i, :] = b_i_lm.x*b_scale
+	return b_samples
+
+def b_eval_mc(meas_samples, b, func):
+	'''
+	b_eval_mc evaluates the fit function func with the coefficients b_samples at the 
+	measurement samples meas_samples using a Monte Carlo simulation
+	'''
+	nsamples = meas_samples.shape[0]
+	nmeas = meas_samples.shape[1]
+	x_samples = np.zeros((nsamples, nmeas))
+	for i in range(nsamples):
+		x_samples[i, :] = func(meas_samples[i, :], b[i, :])[0]
+	return x_samples
+
+def b_mean_cov_mc(samples):
+	m = np.mean(samples, axis=0)
+	cov = np.asmatrix(np.cov(samples, rowvar=False))
+	return m, cov
+
+def _b_cal_samples_to_cal_data(cal_samples):
+	cal_data = np.zeros((cal_samples.shape[1], 4))
+	cal_data[:, 0] = np.mean(cal_samples[:, :, 0], axis=0)
+	cal_data[:, 1] = np.std(cal_samples[:, :, 0], axis=0)
+	cal_data[:, 2] = np.mean(cal_samples[:, :, 1], axis=0)
+	cal_data[:, 3] = np.std(cal_samples[:, :, 1], axis=0)
+	return cal_data
+
+def b_disp_cal_data_mc(cal_samples):
+	cal_data = _b_cal_samples_to_cal_data(cal_samples)
+	b_disp_cal_data(cal_data)
+
+def b_disp_cal_results_mc(b_samples):
+	b, b_cov = b_mean_cov_mc(b_samples)
+	b_res = np.nan
+	b_disp_cal_results(b, b_cov, b_res)
+
+def b_disp_meas_results_mc(x_samples, meas_samples):
+	x, x_cov = b_mean_cov_mc(x_samples)
+	meas_data = np.zeros((meas_samples.shape[1], 2))
+	meas_data[:, 0] = np.mean(meas_samples, axis=0)
+	meas_data[:, 1] = np.std(meas_samples, axis=0)
+	b_disp_meas_results(x, x_cov, meas_data)
+
+def b_test_mc(cal_data, meas_data, func, nsamples=10000):
+	cal_samples = b_sample_cal_data_mc(cal_data, nsamples)
+	meas_samples = b_sample_meas_data_mc(meas_data, nsamples)
+	b_disp_cal_data_mc(cal_samples)
+	b_samples = b_least_mc(cal_samples, func)
+	b_disp_cal_results_mc(b_samples)
+	x_samples = b_eval_mc(meas_samples, b_samples, func)
+	b_disp_meas_results_mc(x_samples, meas_samples)
+	return b_samples, x_samples
+
+# Examples
+
 def b_example_1():
 	print('Example B LEAST 1\n')
 	cal_data = b_read_cal_data(os.path.join(data_dir, 'b_least_1_data_cal.txt'))
@@ -282,7 +376,37 @@ def b_example_3():
 	print('Exponential function\n')
 	b_test(cal_data, meas_data, b_exp_func)
 
+def b_example_mc_1():
+	print('Example B LEAST Monte Carlo 1\n')
+	cal_data = b_read_cal_data(os.path.join(data_dir, 'b_least_1_data_cal.txt'))
+	meas_data = b_read_meas_data(os.path.join(data_dir, 'b_least_1_data_meas.txt'))
+	print('Linear function\n')
+	b_test_mc(cal_data, meas_data, b_linear_func)
+
+def b_example_mc_2():
+	print('Example B LEAST Monte Carlo 2\n')
+	cal_data = b_read_cal_data(os.path.join(data_dir, 'b_least_2_data_cal.txt'))
+	meas_data = b_read_meas_data(os.path.join(data_dir, 'b_least_2_data_meas.txt'))
+	print('Linear function\n')
+	b_test_mc(cal_data, meas_data, b_linear_func)
+	print('Second order polynomial\n')
+	b_test_mc(cal_data, meas_data, b_second_order_poly)
+
+def b_example_mc_3():
+	print('Example B LEAST Monte Carlo 3\n')
+	cal_data = b_read_cal_data(os.path.join(data_dir, 'b_least_3_data_cal.txt'))
+	meas_data = b_read_meas_data(os.path.join(data_dir, 'b_least_3_data_meas.txt'))
+	print('Linear function\n')
+	b_test_mc(cal_data, meas_data, b_linear_func)
+	print('Power function\n')
+	b_test_mc(cal_data, meas_data, b_power_func)
+	print('Exponential function\n')
+	b_test_mc(cal_data, meas_data, b_exp_func)
+
 if __name__ == "__main__":
 	b_example_1()
 	b_example_2()
 	b_example_3()
+	b_example_mc_1()
+	b_example_mc_2()
+	b_example_mc_3()
