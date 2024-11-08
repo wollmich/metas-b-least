@@ -1,5 +1,5 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 07.11.2024
+# Michael Wollensack METAS - 24.10.2024 - 08.11.2024
 
 import os
 import numpy as np
@@ -257,7 +257,9 @@ def b_test(cal_data, meas_data, func):
 
 # Monte Carlo
 
-def b_sample_cal_data_mc(cal_data, nsamples=10000):
+def b_sample_cal_data_mc(cal_data, nsamples=10000, seed=None):
+	if seed is not None:
+		np.random.seed(seed)
 	n = cal_data.shape[0]
 	cal_samples = np.zeros((nsamples, n, 2))
 	for j in range(n):
@@ -265,7 +267,9 @@ def b_sample_cal_data_mc(cal_data, nsamples=10000):
 		cal_samples[:, j, 1] = np.random.normal(cal_data[j, 2], cal_data[j, 3], nsamples)
 	return cal_samples
 
-def b_sample_meas_data_mc(meas_data, nsamples=10000):
+def b_sample_meas_data_mc(meas_data, nsamples=10000, seed=None):
+	if seed is not None:
+		np.random.seed(seed)
 	n = meas_data.shape[0]
 	meas_samples = np.zeros((nsamples, n))
 	for j in range(n):
