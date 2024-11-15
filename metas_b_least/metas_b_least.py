@@ -1,5 +1,5 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 08.11.2024
+# Michael Wollensack METAS - 24.10.2024 - 15.11.2024
 
 import os
 import numpy as np
@@ -122,7 +122,7 @@ def b_exp_func(y, b):
 	dx_db = [dx_db0, dx_db1, dx_db2]
 	return [x, dx_dy, dx_db]
 
-def b_objective_func(x, ux, y, uy, b, func):
+def b_objective_func1(x, ux, y, uy, b, func):
 	'''
 	Computes the residuals for the x and y values and fit function
 
@@ -143,7 +143,7 @@ def b_objective_func(x, ux, y, uy, b, func):
 	>>> y = np.array([2., 4.])
 	>>> uy = np.array([0.2, 0.2])
 	>>> b = np.array([0., 0.5])
-	>>> b_objective_func(x, ux, y, uy, b, b_linear_func)
+	>>> b_objective_func1(x, ux, y, uy, b, b_linear_func)
 	array([0., 0.])
 	'''
 	f = func(y, b)
@@ -154,7 +154,7 @@ def b_objective_func(x, ux, y, uy, b, func):
 	h = g/ug
 	return h
 
-def b_objective_func2(cal_data, b, func):
+def b_objective_func1c(cal_data, b, func):
 	'''
 	Computes the residuals for the given calibration data and fit function
 
@@ -169,14 +169,14 @@ def b_objective_func2(cal_data, b, func):
 	Example:
 	>>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
 	>>> b = np.array([0., 0.5])
-	>>> b_objective_func2(cal_data, b, b_linear_func)
+	>>> b_objective_func1c(cal_data, b, b_linear_func)
 	array([0., 0.])
 	'''
 	x = cal_data[:, 0]
 	ux = cal_data[:, 1]
 	y = cal_data[:, 2]
 	uy = cal_data[:, 3]
-	h = b_objective_func(x, ux, y, uy, b, func)
+	h = b_objective_func1(x, ux, y, uy, b, func)
 	return h
 
 def b_covariance(cal_data, b, func):
@@ -254,9 +254,9 @@ def b_least_start(cal_data, func):
 		raise ValueError('Unknown fit function')
 	return b_start
 
-def _b_residuals(params, cal_data, b_scale, func):
+def _b_residuals1(params, cal_data, b_scale, func):
 	b = params*b_scale
-	f = b_objective_func2(cal_data, b, func)
+	f = b_objective_func1c(cal_data, b, func)
 	#print(np.sum(f*f))
 	return f
 
@@ -283,10 +283,10 @@ def b_least(cal_data, func):
 	b_scale = np.copy(b_start)
 	b_scale[b_scale == 0] = 1
 	b_start2 = b_start/b_scale
-	b_lm = least_squares(_b_residuals, b_start2, args=(cal_data, b_scale, func), method='lm')
+	b_lm = least_squares(_b_residuals1, b_start2, args=(cal_data, b_scale, func), method='lm')
 	b_opt = b_lm.x*b_scale
 	b_opt_cov = b_covariance(cal_data, b_opt, func)
-	b_res = b_objective_func2(cal_data, b_opt, func)
+	b_res = b_objective_func1c(cal_data, b_opt, func)
 	return b_opt, b_opt_cov, b_res
 
 def b_eval(meas_data, b, b_cov, func):
@@ -575,7 +575,7 @@ def b_least_mc(cal_samples, func):
 	for i in range(nsamples):
 		cal_data_i[:, 0] = cal_samples[i, :, 0]
 		cal_data_i[:, 2] = cal_samples[i, :, 1]
-		b_i_lm = least_squares(_b_residuals, b_start2, args=(cal_data_i, b_scale, func), method='lm')
+		b_i_lm = least_squares(_b_residuals1, b_start2, args=(cal_data_i, b_scale, func), method='lm')
 		b_samples[i, :] = b_i_lm.x*b_scale
 	return b_samples
 
