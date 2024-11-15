@@ -179,6 +179,66 @@ def b_objective_func1c(cal_data, b, func):
 	h = b_objective_func1(x, ux, y, uy, b, func)
 	return h
 
+def b_objective_func2(x, ux, y, uy, y2, b, func):
+	'''
+	Computes the residuals for the x and y values and fit function
+
+	Parameters:
+	x (numpy.ndarray): A 1D array containing the x values.
+	ux (numpy.ndarray): A 1D array containing the standard uncertainties of x.
+	y (numpy.ndarray): A 1D array containing the y values.
+	uy (numpy.ndarray): A 1D array containing the standard uncertainties of y.
+	y2 (numpy.ndarray): A 1D array containing the y2 values.
+	b (numpy.ndarray): A 1D array containing the coefficients b.
+	func (callable): The fit function.
+
+	Returns:
+	numpy.ndarray: The residuals.
+
+	Example:
+	>>> x = np.array([1., 2.])
+	>>> ux = np.array([0.1, 0.1])
+	>>> y = np.array([2., 4.])
+	>>> uy = np.array([0.2, 0.2])
+	>>> y2 = np.array([2., 4.])
+	>>> b = np.array([0., 0.5])
+	>>> b_objective_func2(x, ux, y, uy, y2, b, b_linear_func)
+	array([0., 0., 0., 0.])
+	'''
+	f = func(y2, b)
+	x2 = f[0]
+	wdx = (x2 - x)/ux
+	wdy = (y2 - y)/uy
+	g = np.concatenate((wdx, wdy))
+	return g
+
+def b_objective_func2c(cal_data, y2, b, func):
+	'''
+	Computes the residuals for the given calibration data and fit function
+
+	Parameters:
+	cal_data (numpy.ndarray): A 2D array containing the calibration data.
+	y2 (numpy.ndarray): A 1D array containing the y2 values.
+	b (numpy.ndarray): A 1D array containing the coefficients b.
+	func (callable): The fit function.
+
+	Returns:
+	numpy.ndarray: The residuals.
+
+	Example:
+	>>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
+	>>> y2 = np.array([2., 4.])
+	>>> b = np.array([0., 0.5])
+	>>> b_objective_func2c(cal_data, y2, b, b_linear_func)
+	array([0., 0., 0., 0.])
+	'''
+	x = cal_data[:, 0]
+	ux = cal_data[:, 1]
+	y = cal_data[:, 2]
+	uy = cal_data[:, 3]
+	h = b_objective_func2(x, ux, y, uy, y2, b, func)
+	return h
+
 def b_covariance(cal_data, b, func):
 	'''
 	Computes the covariance matrix of the coefficients for the given calibration data and fit function.
