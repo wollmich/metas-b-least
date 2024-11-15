@@ -320,6 +320,15 @@ def _b_residuals1(params, cal_data, b_scale, func):
 	#print(np.sum(f*f))
 	return f
 
+def _b_residuals2(params, cal_data, y2_b_scale, func):
+	n = cal_data.shape[0]
+	y2_b = params*y2_b_scale
+	y2 = y2_b[:n]
+	b = y2_b[n:]
+	f = b_objective_func2c(cal_data, y2, b, func)
+	#print(np.sum(f*f))
+	return f
+
 def b_least(cal_data, func):
 	'''
 	Fits the coefficients of the fit function using the calibration data.
@@ -337,16 +346,21 @@ def b_least(cal_data, func):
 	Example:
 	>>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
 	>>> b_least(cal_data, b_linear_func)
-	(array([0., 0.5]), array([[0.1, -0.03], [-0.03, 0.01]]), array([0., 0.]))
+	(array([0., 0.5]), array([[0.1, -0.03], [-0.03, 0.01]]), array([0., 0., 0., 0.]))
 	'''
+	n = cal_data.shape[0]
+	y2_start = cal_data[:, 2]
 	b_start = b_least_start(cal_data, func)
-	b_scale = np.copy(b_start)
-	b_scale[b_scale == 0] = 1
-	b_start2 = b_start/b_scale
-	b_lm = least_squares(_b_residuals1, b_start2, args=(cal_data, b_scale, func), method='lm')
-	b_opt = b_lm.x*b_scale
+	y2_b_start = np.concatenate((y2_start, b_start))
+	y2_b_scale = np.copy(y2_b_start)
+	y2_b_scale[y2_b_scale == 0] = 1
+	y2_b_start2 = y2_b_start/y2_b_scale
+	y2_b_lm = least_squares(_b_residuals2, y2_b_start2, args=(cal_data, y2_b_scale, func), method='lm')
+	y2_b_opt = y2_b_lm.x*y2_b_scale
+	y_opt = y2_b_opt[:n]
+	b_opt = y2_b_opt[n:]
 	b_opt_cov = b_covariance(cal_data, b_opt, func)
-	b_res = b_objective_func1c(cal_data, b_opt, func)
+	b_res = b_objective_func2c(cal_data, y_opt, b_opt, func)
 	return b_opt, b_opt_cov, b_res
 
 def b_eval(meas_data, b, b_cov, func):
