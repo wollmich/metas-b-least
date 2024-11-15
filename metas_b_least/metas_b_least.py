@@ -640,17 +640,22 @@ def b_least_mc(cal_samples, func):
 	'''
 	nsamples = cal_samples.shape[0]
 	cal_data = _b_cal_samples_to_cal_data(cal_samples)
+	n = cal_data.shape[0]
+	y2_start = cal_data[:, 2]
 	cal_data_i = np.copy(cal_data)
 	b_start = b_least_start(cal_data, func)
-	b_scale = np.copy(b_start)
-	b_scale[b_scale == 0] = 1
-	b_start2 = b_start/b_scale
+	y2_b_start = np.concatenate((y2_start, b_start))
+	y2_b_scale = np.copy(y2_b_start)
+	y2_b_scale[y2_b_scale == 0] = 1
+	y2_b_start2 = y2_b_start/y2_b_scale
 	b_samples = np.zeros((nsamples, b_start.size))
 	for i in range(nsamples):
 		cal_data_i[:, 0] = cal_samples[i, :, 0]
 		cal_data_i[:, 2] = cal_samples[i, :, 1]
-		b_i_lm = least_squares(_b_residuals1, b_start2, args=(cal_data_i, b_scale, func), method='lm')
-		b_samples[i, :] = b_i_lm.x*b_scale
+		y2_b_i_lm = least_squares(_b_residuals2, y2_b_start2, args=(cal_data_i, y2_b_scale, func), method='lm')
+		y2_b_opt_i = y2_b_i_lm.x*y2_b_scale
+		b_opt_i = y2_b_opt_i[n:]
+		b_samples[i, :] = b_opt_i
 	return b_samples
 
 def b_eval_mc(meas_samples, b_samples, func):
