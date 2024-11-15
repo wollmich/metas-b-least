@@ -329,6 +329,30 @@ def _b_residuals2(params, cal_data, y2_b_scale, func):
 	#print(np.sum(f*f))
 	return f
 
+def _b_jacobian2(params, cal_data, y2_b_scale, func):
+	n = cal_data.shape[0]
+	nb = y2_b_scale.shape[0] - n
+	y2_b = params*y2_b_scale
+	y2 = y2_b[:n]
+	b = y2_b[n:]
+	y2_scale = y2_b_scale[:n]
+	b_scale = y2_b_scale[n:]
+	ux = cal_data[:, 1]
+	uy = cal_data[:, 3]
+	f = func(y2, b)
+	dx2_dy2 = f[1]
+	dx2_db = f[2]
+	dy2_dy2 = 1
+	jacobi = np.zeros((2*n, n + nb))
+	for i in range(n):
+		# Weighted x
+		jacobi[i, i] = dx2_dy2[i] * y2_scale[i] / ux[i]
+		for j in range(nb):
+			jacobi[i, n+j] = dx2_db[j][i] * b_scale[j] / ux[i]
+		# Weighted y
+		jacobi[n+i, i] = dy2_dy2 * y2_scale[i] / uy[i]
+	return jacobi
+
 def b_least(cal_data, func):
 	'''
 	Fits the coefficients of the fit function using the calibration data.
@@ -355,7 +379,7 @@ def b_least(cal_data, func):
 	y2_b_scale = np.copy(y2_b_start)
 	y2_b_scale[y2_b_scale == 0] = 1
 	y2_b_start2 = y2_b_start/y2_b_scale
-	y2_b_lm = least_squares(_b_residuals2, y2_b_start2, args=(cal_data, y2_b_scale, func), method='lm')
+	y2_b_lm = least_squares(_b_residuals2, y2_b_start2, jac=_b_jacobian2, args=(cal_data, y2_b_scale, func), method='lm')
 	y2_b_opt = y2_b_lm.x*y2_b_scale
 	y_opt = y2_b_opt[:n]
 	b_opt = y2_b_opt[n:]
