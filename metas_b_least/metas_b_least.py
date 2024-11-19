@@ -236,16 +236,16 @@ def b_least_start(cal_data, func):
     '''
     x = cal_data[:, 0]
     y = cal_data[:, 2]
-    if func == b_linear_func:
+    if func is b_linear_func:
         b_start = np.flip(np.polyfit(y, x, 1))
-    elif func == b_second_order_poly:
+    elif func is b_second_order_poly:
         b_start = np.flip(np.polyfit(y, x, 2))
-    elif func == b_third_order_poly:
+    elif func is b_third_order_poly:
         b_start = np.flip(np.polyfit(y, x, 3))
-    elif func == b_power_func:
+    elif func is b_power_func:
         b0_b1 = np.flip(np.polyfit(y, x, 1))
         b_start = np.append(b0_b1, 0)
-    elif func == b_exp_func:
+    elif func is b_exp_func:
         # x = b0 + b1*exp(b2*y)
         # x = b0 + b1*(1 + b2*y + b2^2/2*y^2 + ...)
         # x = b0 + b1 + b1*b2*y + b1*b2^2/2*y^2 + ...
