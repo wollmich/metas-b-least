@@ -126,7 +126,7 @@ def b_exp_func(y, b):
     dx_db = [dx_db0, dx_db1, dx_db2]
     return [x, dx_dy, dx_db]
 
-def b_objective_func1(x, ux, y, uy, b, func):
+def b_objective_func1(x, ux, y, uy, b, func): # pylint: disable=R0913
     '''
     Computes the residuals for the x and y values and fit function
 
@@ -183,7 +183,7 @@ def b_objective_func1c(cal_data, b, func):
     h = b_objective_func1(x, ux, y, uy, b, func)
     return h
 
-def b_covariance(cal_data, b, func):
+def b_covariance(cal_data, b, func):  # pylint: disable=R0914
     '''
     Computes the covariance matrix of the coefficients for the given 
     calibration data and fit function.
@@ -319,7 +319,7 @@ def b_eval(meas_data, b, b_cov, func):
     x, _, x_cov, _, _ = b_eval_xy(meas_data, b, b_cov, func)
     return x, x_cov
 
-def b_eval_xy(meas_data, b, b_cov, func):
+def b_eval_xy(meas_data, b, b_cov, func):  # pylint: disable=R0914
     '''
     Evaluates the fit function with the given coefficients at the measurement data.
 
@@ -424,7 +424,7 @@ def b_disp_meas_results(x, x_cov, meas_data):
         print('Covariance cov(x)')
         print(x_cov)
 
-def b_plot(cal_data, meas_data, b, b_cov, func):
+def b_plot(cal_data, meas_data, b, b_cov, func):  # pylint: disable=R0914
     '''
     Plots the calibration data, the measurement data and the fit function using the coefficients.
 
