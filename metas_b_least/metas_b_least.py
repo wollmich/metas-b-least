@@ -11,12 +11,12 @@ from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
 
 try:
-	from IPython import get_ipython
-	from matplotlib_inline.backend_inline import set_matplotlib_formats
-	if get_ipython() is not None:
-		set_matplotlib_formats('svg')
+    from IPython import get_ipython
+    from matplotlib_inline.backend_inline import set_matplotlib_formats
+    if get_ipython() is not None:
+        set_matplotlib_formats('svg')
 except ImportError:
-	pass # IPython is not installed, continue without setting the format
+    pass # IPython is not installed, continue without setting the format
 
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
