@@ -1,6 +1,10 @@
 # B_LEAST ISO 6143:2001
 # Michael Wollensack METAS - 24.10.2024 - 19.11.2024
 
+"""
+METAS B LEAST is a Python implementation of the B LEAST program of the ISO 6143:2001 norm.
+"""
+
 import os
 import numpy as np
 from scipy.optimize import least_squares
@@ -122,7 +126,7 @@ def b_exp_func(y, b):
     dx_db = [dx_db0, dx_db1, dx_db2]
     return [x, dx_dy, dx_db]
 
-def b_objective_func1(x, ux, y, uy, b, func):
+def b_objective_func1(x, ux, y, uy, b, func): # pylint: disable=R0913, R0917
     '''
     Computes the residuals for the x and y values and fit function
 
@@ -239,9 +243,10 @@ def b_objective_func2c(cal_data, y2, b, func):
     h = b_objective_func2(x, ux, y, uy, y2, b, func)
     return h
 
-def b_covariance(cal_data, b, func):
+def b_covariance(cal_data, b, func):  # pylint: disable=R0914
     '''
-    Computes the covariance matrix of the coefficients for the given calibration data and fit function.
+    Computes the covariance matrix of the coefficients for the given
+    calibration data and fit function.
 
     Parameters:
     cal_data (numpy.ndarray): A 2D array containing the calibration data.
@@ -291,16 +296,16 @@ def b_least_start(cal_data, func):
     '''
     x = cal_data[:, 0]
     y = cal_data[:, 2]
-    if func == b_linear_func:
+    if func is b_linear_func:
         b_start = np.flip(np.polyfit(y, x, 1))
-    elif func == b_second_order_poly:
+    elif func is b_second_order_poly:
         b_start = np.flip(np.polyfit(y, x, 2))
-    elif func == b_third_order_poly:
+    elif func is b_third_order_poly:
         b_start = np.flip(np.polyfit(y, x, 3))
-    elif func == b_power_func:
+    elif func is b_power_func:
         b0_b1 = np.flip(np.polyfit(y, x, 1))
         b_start = np.append(b0_b1, 0)
-    elif func == b_exp_func:
+    elif func is b_exp_func:
         # x = b0 + b1*exp(b2*y)
         # x = b0 + b1*(1 + b2*y + b2^2/2*y^2 + ...)
         # x = b0 + b1 + b1*b2*y + b1*b2^2/2*y^2 + ...
@@ -409,10 +414,10 @@ def b_eval(meas_data, b, b_cov, func):
     >>> b_eval(meas_data, b, b_cov, b_linear_func)
     (array([1.25, 1.75]), array([[0.015, 0.0075], [0.0075, 0.0225]]))
     '''
-    x, y, x_cov, y_cov, xy_cov = b_eval_xy(meas_data, b, b_cov, func)
+    x, _, x_cov, _, _ = b_eval_xy(meas_data, b, b_cov, func)
     return x, x_cov
 
-def b_eval_xy(meas_data, b, b_cov, func):
+def b_eval_xy(meas_data, b, b_cov, func):  # pylint: disable=R0914
     '''
     Evaluates the fit function with the given coefficients at the measurement data.
 
@@ -513,11 +518,11 @@ def b_disp_meas_results(x, x_cov, meas_data):
     print('Measurement data:')
     ux = np.sqrt(np.diag(x_cov))
     print(np.concatenate((np.array([x, ux]).T, meas_data), axis=1))
-    if (ux.size > 1):
+    if ux.size > 1:
         print('Covariance cov(x)')
         print(x_cov)
 
-def b_plot(cal_data, meas_data, b, b_cov, func):
+def b_plot(cal_data, meas_data, b, b_cov, func):  # pylint: disable=R0914
     '''
     Plots the calibration data, the measurement data and the fit function using the coefficients.
 
@@ -533,7 +538,7 @@ def b_plot(cal_data, meas_data, b, b_cov, func):
     '''
     k = 2
     # figure
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
     # fit function
     ymin = np.min(np.array([np.min(cal_data[:,2]), np.min(meas_data[:,0])]))
     ymax = np.max(np.array([np.max(cal_data[:,2]), np.max(meas_data[:,0])]))
@@ -542,16 +547,21 @@ def b_plot(cal_data, meas_data, b, b_cov, func):
     fx, fx_cov = b_eval(f_data, b, b_cov, func)
     ufx = np.sqrt(np.diag(fx_cov))
     ax.plot(fx, fy, color='blue', label='Fit x = f(y)')
-    ax.fill_betweenx(fy.flatten(), (fx-k*ufx).flatten(), (fx+k*ufx).flatten(), color='blue', alpha=0.5)
+    ax.fill_betweenx(fy.flatten(), (fx-k*ufx).flatten(), (fx+k*ufx).flatten(),
+                     color='blue', alpha=0.5)
     # calibration data
-    ax.errorbar(cal_data[:,0], cal_data[:,2], xerr=k*cal_data[:,1], yerr=k*cal_data[:,3], fmt='.', color='red', ecolor='red', capsize=3, label='Reference points')
+    ax.errorbar(cal_data[:,0], cal_data[:,2], xerr=k*cal_data[:,1], yerr=k*cal_data[:,3],
+                fmt='.', color='red', ecolor='red', capsize=3, label='Reference points')
     for i in range(cal_data.shape[0]):
-        _b_plot_ellipse(ax, cal_data[i,0], cal_data[i,2], np.array([[cal_data[i,1]**2, 0], [0, cal_data[i,3]**2]]), 'red')
+        _b_plot_ellipse(ax, cal_data[i,0], cal_data[i,2], np.array([[cal_data[i,1]**2, 0],
+                                                                    [0, cal_data[i,3]**2]]), 'red')
     # measurement data
     x, y, x_cov, y_cov, xy_cov = b_eval_xy(meas_data, b, b_cov, func)
-    ax.errorbar(x, meas_data[:,0], xerr=k*np.sqrt(np.diag(x_cov)), yerr=k*np.sqrt(np.diag(y_cov)), fmt='.', color='black', ecolor='black', capsize=3, label='Measurement points')
+    ax.errorbar(x, meas_data[:,0], xerr=k*np.sqrt(np.diag(x_cov)), yerr=k*np.sqrt(np.diag(y_cov)),
+                fmt='.', color='black', ecolor='black', capsize=3, label='Measurement points')
     for i in range(meas_data.shape[0]):
-        _b_plot_ellipse(ax, x[i], y[i], np.array([[x_cov[i,i], xy_cov[i,i]], [xy_cov[i,i], y_cov[i,i]]]), 'black')
+        _b_plot_ellipse(ax, x[i], y[i], np.array([[x_cov[i,i], xy_cov[i,i]],
+                                                  [xy_cov[i,i], y_cov[i,i]]]), 'black')
     plt.xlabel('Assigned value x')
     plt.ylabel('Instrument response y')
     plt.legend()
@@ -747,7 +757,8 @@ def b_disp_cal_results_mc(b_samples):
     Displays the coefficients, their uncertainties, the covariance matrix.
 
     Parameters:
-    b_samples (numpy.ndarray): A 2D array where each row contains the coefficients b for one samples.
+    b_samples (numpy.ndarray): A 2D array where each row contains the coefficients b
+                               for one samples.
 
     Returns:
     None
