@@ -1,8 +1,12 @@
 # METAS B LEAST
 
-METAS B LEAST is a Python implementation of the B LEAST program of the [ISO 6143:2001](https://www.iso.org/standard/24665.html) norm. 
+METAS B LEAST is a Python implementation of the B LEAST program of the [ISO 6143:2001](https://www.iso.org/standard/24665.html) norm.
 The derivations of the different fit functions have been explicitly programmed, see [metas_b_lest.py](https://github.com/wollmich/metas-b-least/blob/main/metas_b_least/metas_b_least.py).
 The program has been verified against [METAS UncLib](https://www.metas.ch/unclib) which is using automatic differentiation.
+
+The following link will launch an interactive Python environment where you can you use METAS B LEAST:
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wollmich/metas-b-least/HEAD)
 
 ## Examples
 
@@ -23,6 +27,9 @@ b_disp_cal_results(b, b_cov, b_res)
 # Evaluate the fit function with the coefficients at the measurement data
 x, x_cov = b_eval(meas_data, b, b_cov, b_linear_func)
 b_disp_meas_results(x, x_cov, meas_data)
+
+# Plot calibration data, measurement data and fit function
+b_plot(cal_data, meas_data, b, b_cov, b_linear_func)
 ```
 
 See as well the following Jupyter Notebooks:
@@ -63,6 +70,8 @@ The following fit functions are available:
 
 **b_disp_meas_results** displays the measurement data `x` and `meas_data`.
 
+**b_plot** plots the calibration data `cal_data`, the measurement data `meas_data` and the fit function using the coefficients `b`.
+
 ## Source Code
 
 https://github.com/wollmich/metas-b-least/
@@ -75,7 +84,8 @@ https://pypi.org/project/metas-b-least/
 
 - [NumPy](https://pypi.org/project/numpy/)
 - [SciPy](https://pypi.org/project/scipy/)
+- [Matplotlib](https://pypi.org/project/matplotlib/)
 
 ---
 
-Michael Wollensack METAS - 28.10.2024
+Michael Wollensack METAS - 19.11.2024
