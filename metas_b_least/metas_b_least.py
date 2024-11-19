@@ -183,7 +183,7 @@ def b_objective_func1c(cal_data, b, func):
     h = b_objective_func1(x, ux, y, uy, b, func)
     return h
 
-def b_objective_func2(x, ux, y, uy, y2, b, func): # pylint: disable=R0913, R0917
+def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R0917
     '''
     Computes the residuals for the x and y values and fit function
 
@@ -243,7 +243,7 @@ def b_objective_func2c(cal_data, y2, b, func):
     h = b_objective_func2(x, ux, y, uy, y2, b, func)
     return h
 
-def b_covariance(cal_data, b, func): # pylint: disable=R0914
+def b_covariance(cal_data, b, func):  # pylint: disable=R0914
     '''
     Computes the covariance matrix of the coefficients for the given
     calibration data and fit function.
@@ -334,7 +334,7 @@ def _b_residuals2(params, cal_data, y2_b_scale, func):
     #print(np.sum(f*f))
     return f
 
-def _b_jacobian2(params, cal_data, y2_b_scale, func): # pylint: disable=R0914
+def _b_jacobian2(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
     n = cal_data.shape[0]
     nb = y2_b_scale.shape[0] - n
     y2_b = params*y2_b_scale
@@ -663,7 +663,7 @@ def b_sample_meas_data_mc(meas_data, nsamples=10000, seed=None):
         meas_samples[:, j] = np.random.normal(meas_data[j, 0], meas_data[j, 1], nsamples)
     return meas_samples
 
-def b_least_mc(cal_samples, func): # pylint: disable=R0914
+def b_least_mc(cal_samples, func):  # pylint: disable=R0914
     '''
     Fits the coefficients of the fit function for each sample using the calibration samples.
 
