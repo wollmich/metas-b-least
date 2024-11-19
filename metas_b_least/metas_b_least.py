@@ -183,9 +183,69 @@ def b_objective_func1c(cal_data, b, func):
     h = b_objective_func1(x, ux, y, uy, b, func)
     return h
 
+def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R0917
+    '''
+    Computes the residuals for the x and y values and fit function
+
+    Parameters:
+    x (numpy.ndarray): A 1D array containing the x values.
+    ux (numpy.ndarray): A 1D array containing the standard uncertainties of x.
+    y (numpy.ndarray): A 1D array containing the y values.
+    uy (numpy.ndarray): A 1D array containing the standard uncertainties of y.
+    y2 (numpy.ndarray): A 1D array containing the y2 values.
+    b (numpy.ndarray): A 1D array containing the coefficients b.
+    func (callable): The fit function.
+
+    Returns:
+    numpy.ndarray: The residuals.
+
+    Example:
+    >>> x = np.array([1., 2.])
+    >>> ux = np.array([0.1, 0.1])
+    >>> y = np.array([2., 4.])
+    >>> uy = np.array([0.2, 0.2])
+    >>> y2 = np.array([2., 4.])
+    >>> b = np.array([0., 0.5])
+    >>> b_objective_func2(x, ux, y, uy, y2, b, b_linear_func)
+    array([0., 0., 0., 0.])
+    '''
+    f = func(y2, b)
+    x2 = f[0]
+    wdx = (x2 - x)/ux
+    wdy = (y2 - y)/uy
+    g = np.concatenate((wdx, wdy))
+    return g
+
+def b_objective_func2c(cal_data, y2, b, func):
+    '''
+    Computes the residuals for the given calibration data and fit function
+
+    Parameters:
+    cal_data (numpy.ndarray): A 2D array containing the calibration data.
+    y2 (numpy.ndarray): A 1D array containing the y2 values.
+    b (numpy.ndarray): A 1D array containing the coefficients b.
+    func (callable): The fit function.
+
+    Returns:
+    numpy.ndarray: The residuals.
+
+    Example:
+    >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
+    >>> y2 = np.array([2., 4.])
+    >>> b = np.array([0., 0.5])
+    >>> b_objective_func2c(cal_data, y2, b, b_linear_func)
+    array([0., 0., 0., 0.])
+    '''
+    x = cal_data[:, 0]
+    ux = cal_data[:, 1]
+    y = cal_data[:, 2]
+    uy = cal_data[:, 3]
+    h = b_objective_func2(x, ux, y, uy, y2, b, func)
+    return h
+
 def b_covariance(cal_data, b, func):  # pylint: disable=R0914
     '''
-    Computes the covariance matrix of the coefficients for the given 
+    Computes the covariance matrix of the coefficients for the given
     calibration data and fit function.
 
     Parameters:
@@ -265,6 +325,39 @@ def _b_residuals1(params, cal_data, b_scale, func):
     #print(np.sum(f*f))
     return f
 
+def _b_residuals2(params, cal_data, y2_b_scale, func):
+    n = cal_data.shape[0]
+    y2_b = params*y2_b_scale
+    y2 = y2_b[:n]
+    b = y2_b[n:]
+    f = b_objective_func2c(cal_data, y2, b, func)
+    #print(np.sum(f*f))
+    return f
+
+def _b_jacobian2(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
+    n = cal_data.shape[0]
+    nb = y2_b_scale.shape[0] - n
+    y2_b = params*y2_b_scale
+    y2 = y2_b[:n]
+    b = y2_b[n:]
+    y2_scale = y2_b_scale[:n]
+    b_scale = y2_b_scale[n:]
+    ux = cal_data[:, 1]
+    uy = cal_data[:, 3]
+    f = func(y2, b)
+    dx2_dy2 = f[1]
+    dx2_db = f[2]
+    dy2_dy2 = 1
+    jacobi = np.zeros((2*n, n + nb))
+    for i in range(n):
+        # Weighted x
+        jacobi[i, i] = dx2_dy2[i] * y2_scale[i] / ux[i]
+        for j in range(nb):
+            jacobi[i, n+j] = dx2_db[j][i] * b_scale[j] / ux[i]
+        # Weighted y
+        jacobi[n+i, i] = dy2_dy2 * y2_scale[i] / uy[i]
+    return jacobi
+
 def b_least(cal_data, func):
     '''
     Fits the coefficients of the fit function using the calibration data.
@@ -282,16 +375,23 @@ def b_least(cal_data, func):
     Example:
     >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
     >>> b_least(cal_data, b_linear_func)
-    (array([0., 0.5]), array([[0.1, -0.03], [-0.03, 0.01]]), array([0., 0.]))
+    (array([0., 0.5]), array([[0.1, -0.03], [-0.03, 0.01]]), array([0., 0., 0., 0.]))
     '''
+    n = cal_data.shape[0]
+    y2_start = cal_data[:, 2]
     b_start = b_least_start(cal_data, func)
-    b_scale = np.copy(b_start)
-    b_scale[b_scale == 0] = 1
-    b_start2 = b_start/b_scale
-    b_lm = least_squares(_b_residuals1, b_start2, args=(cal_data, b_scale, func), method='lm')
-    b_opt = b_lm.x*b_scale
+    y2_b_start = np.concatenate((y2_start, b_start))
+    y2_b_scale = np.copy(y2_b_start)
+    y2_b_scale[y2_b_scale == 0] = 1
+    y2_b_start2 = y2_b_start/y2_b_scale
+    y2_b_lm = least_squares(_b_residuals2, y2_b_start2,
+                            jac=_b_jacobian2, args=(cal_data, y2_b_scale, func),
+                            method='lm')
+    y2_b_opt = y2_b_lm.x*y2_b_scale
+    y_opt = y2_b_opt[:n]
+    b_opt = y2_b_opt[n:]
     b_opt_cov = b_covariance(cal_data, b_opt, func)
-    b_res = b_objective_func1c(cal_data, b_opt, func)
+    b_res = b_objective_func2c(cal_data, y_opt, b_opt, func)
     return b_opt, b_opt_cov, b_res
 
 def b_eval(meas_data, b, b_cov, func):
@@ -563,7 +663,7 @@ def b_sample_meas_data_mc(meas_data, nsamples=10000, seed=None):
         meas_samples[:, j] = np.random.normal(meas_data[j, 0], meas_data[j, 1], nsamples)
     return meas_samples
 
-def b_least_mc(cal_samples, func):
+def b_least_mc(cal_samples, func):  # pylint: disable=R0914
     '''
     Fits the coefficients of the fit function for each sample using the calibration samples.
 
@@ -576,18 +676,23 @@ def b_least_mc(cal_samples, func):
     '''
     nsamples = cal_samples.shape[0]
     cal_data = _b_cal_samples_to_cal_data(cal_samples)
+    n = cal_data.shape[0]
+    y2_start = cal_data[:, 2]
     cal_data_i = np.copy(cal_data)
     b_start = b_least_start(cal_data, func)
-    b_scale = np.copy(b_start)
-    b_scale[b_scale == 0] = 1
-    b_start2 = b_start/b_scale
+    y2_b_start = np.concatenate((y2_start, b_start))
+    y2_b_scale = np.copy(y2_b_start)
+    y2_b_scale[y2_b_scale == 0] = 1
+    y2_b_start2 = y2_b_start/y2_b_scale
     b_samples = np.zeros((nsamples, b_start.size))
     for i in range(nsamples):
         cal_data_i[:, 0] = cal_samples[i, :, 0]
         cal_data_i[:, 2] = cal_samples[i, :, 1]
-        b_i_lm = least_squares(_b_residuals1, b_start2, args=(cal_data_i, b_scale, func),
-                               method='lm')
-        b_samples[i, :] = b_i_lm.x*b_scale
+        y2_b_i_lm = least_squares(_b_residuals2, y2_b_start2, args=(cal_data_i, y2_b_scale, func),
+                                  method='lm')
+        y2_b_opt_i = y2_b_i_lm.x*y2_b_scale
+        b_opt_i = y2_b_opt_i[n:]
+        b_samples[i, :] = b_opt_i
     return b_samples
 
 def b_eval_mc(meas_samples, b_samples, func):
