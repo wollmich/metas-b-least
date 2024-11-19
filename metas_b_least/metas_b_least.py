@@ -126,7 +126,7 @@ def b_exp_func(y, b):
     dx_db = [dx_db0, dx_db1, dx_db2]
     return [x, dx_dy, dx_db]
 
-def b_objective_func1(x, ux, y, uy, b, func): # pylint: disable=R0913
+def b_objective_func1(x, ux, y, uy, b, func): # pylint: disable=R0913, R0917
     '''
     Computes the residuals for the x and y values and fit function
 
