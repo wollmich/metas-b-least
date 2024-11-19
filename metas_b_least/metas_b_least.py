@@ -1,6 +1,10 @@
 # B_LEAST ISO 6143:2001
 # Michael Wollensack METAS - 24.10.2024 - 19.11.2024
 
+"""
+METAS B LEAST is a Python implementation of the B LEAST program of the ISO 6143:2001 norm.
+"""
+
 import os
 import numpy as np
 from scipy.optimize import least_squares
@@ -458,7 +462,7 @@ def b_plot(cal_data, meas_data, b, b_cov, func):
     ax.errorbar(x, meas_data[:,0], xerr=k*np.sqrt(np.diag(x_cov)), yerr=k*np.sqrt(np.diag(y_cov)),
                 fmt='.', color='black', ecolor='black', capsize=3, label='Measurement points')
     for i in range(meas_data.shape[0]):
-        _b_plot_ellipse(ax, x[i], y[i], np.array([[x_cov[i,i], xy_cov[i,i]], 
+        _b_plot_ellipse(ax, x[i], y[i], np.array([[x_cov[i,i], xy_cov[i,i]],
                                                   [xy_cov[i,i], y_cov[i,i]]]), 'black')
     plt.xlabel('Assigned value x')
     plt.ylabel('Instrument response y')
