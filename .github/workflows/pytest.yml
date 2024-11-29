@@ -25,5 +25,4 @@ jobs:
       run: ls -R
     - name: Test the code with pytest
       run: |
-        export PYTHONPATH=$PYTHONPATH:$(pwd)/metas_b_least
         pytest
