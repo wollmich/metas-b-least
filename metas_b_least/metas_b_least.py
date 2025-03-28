@@ -1,5 +1,5 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 19.11.2024
+# Michael Wollensack METAS - 24.10.2024 - 28.03.2025
 
 """
 METAS B LEAST is a Python implementation of the B LEAST program of the ISO 6143:2001 norm.
@@ -571,7 +571,7 @@ def b_plot(cal_data, meas_data, b, b_cov, func):  # pylint: disable=R0914
 
 def _b_plot_ellipse(ax, px, py, cv, color):
     k = 2.45
-    d, v = np.linalg.eig(k*cv)
+    d, v = np.linalg.eig(k**2*cv)
     t = np.linspace(0, 2*np.pi, num=100)
     e = np.dot(v, np.diag(np.sqrt(d)))
     f = np.array([np.cos(t), np.sin(t)])
