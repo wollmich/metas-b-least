@@ -1,5 +1,5 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 28.03.2025
+# Michael Wollensack METAS - 24.10.2024 - 08.07.2025
 
 """
 METAS B LEAST is a Python implementation of the B LEAST program of the ISO 6143:2001 norm.
@@ -126,64 +126,7 @@ def b_exp_func(y, b):
     dx_db = [dx_db0, dx_db1, dx_db2]
     return [x, dx_dy, dx_db]
 
-def b_objective_func1(x, ux, y, uy, b, func):  # pylint: disable=R0913, R0917
-    '''
-    Computes the residuals for the x and y values and fit function
-
-    Parameters:
-    x (numpy.ndarray): A 1D array containing the x values.
-    ux (numpy.ndarray): A 1D array containing the standard uncertainties of x.
-    y (numpy.ndarray): A 1D array containing the y values.
-    uy (numpy.ndarray): A 1D array containing the standard uncertainties of y.
-    b (numpy.ndarray): A 1D array containing the coefficients b.
-    func (callable): The fit function.
-
-    Returns:
-    numpy.ndarray: The residuals.
-
-    Example:
-    >>> x = np.array([1., 2.])
-    >>> ux = np.array([0.1, 0.1])
-    >>> y = np.array([2., 4.])
-    >>> uy = np.array([0.2, 0.2])
-    >>> b = np.array([0., 0.5])
-    >>> b_objective_func1(x, ux, y, uy, b, b_linear_func)
-    array([0., 0.])
-    '''
-    f = func(y, b)
-    g = f[0] - x
-    dg_dx = -1
-    dg_dy = f[1]
-    ug = np.sqrt((dg_dx*ux)**2 + (dg_dy*uy)**2)
-    h = g/ug
-    return h
-
-def b_objective_func1c(cal_data, b, func):
-    '''
-    Computes the residuals for the given calibration data and fit function
-
-    Parameters:
-    cal_data (numpy.ndarray): A 2D array containing the calibration data.
-    b (numpy.ndarray): A 1D array containing the coefficients b.
-    func (callable): The fit function.
-
-    Returns:
-    numpy.ndarray: The residuals.
-
-    Example:
-    >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
-    >>> b = np.array([0., 0.5])
-    >>> b_objective_func1c(cal_data, b, b_linear_func)
-    array([0., 0.])
-    '''
-    x = cal_data[:, 0]
-    ux = cal_data[:, 1]
-    y = cal_data[:, 2]
-    uy = cal_data[:, 3]
-    h = b_objective_func1(x, ux, y, uy, b, func)
-    return h
-
-def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R0917
+def b_objective_func(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R0917
     '''
     Computes the residuals for the x and y values and fit function
 
@@ -206,7 +149,7 @@ def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R091
     >>> uy = np.array([0.2, 0.2])
     >>> y2 = np.array([2., 4.])
     >>> b = np.array([0., 0.5])
-    >>> b_objective_func2(x, ux, y, uy, y2, b, b_linear_func)
+    >>> b_objective_func(x, ux, y, uy, y2, b, b_linear_func)
     array([0., 0., 0., 0.])
     '''
     f = func(y2, b)
@@ -215,68 +158,6 @@ def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R091
     wdy = (y2 - y)/uy
     g = np.concatenate((wdx, wdy))
     return g
-
-def b_objective_func2c(cal_data, y2, b, func):
-    '''
-    Computes the residuals for the given calibration data and fit function
-
-    Parameters:
-    cal_data (numpy.ndarray): A 2D array containing the calibration data.
-    y2 (numpy.ndarray): A 1D array containing the y2 values.
-    b (numpy.ndarray): A 1D array containing the coefficients b.
-    func (callable): The fit function.
-
-    Returns:
-    numpy.ndarray: The residuals.
-
-    Example:
-    >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
-    >>> y2 = np.array([2., 4.])
-    >>> b = np.array([0., 0.5])
-    >>> b_objective_func2c(cal_data, y2, b, b_linear_func)
-    array([0., 0., 0., 0.])
-    '''
-    x = cal_data[:, 0]
-    ux = cal_data[:, 1]
-    y = cal_data[:, 2]
-    uy = cal_data[:, 3]
-    h = b_objective_func2(x, ux, y, uy, y2, b, func)
-    return h
-
-def b_covariance(cal_data, b, func):  # pylint: disable=R0914
-    '''
-    Computes the covariance matrix of the coefficients for the given
-    calibration data and fit function.
-
-    Parameters:
-    cal_data (numpy.ndarray): A 2D array containing the calibration data.
-    b (numpy.ndarray): A 1D array containing the coefficients b.
-    func (callable): The fit function.
-
-    Returns:
-    numpy.ndarray: The covariance matrix of the coefficients b.
-
-    Example:
-    >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
-    >>> b = np.array([0., 0.5])
-    >>> b_covariance(cal_data, b, b_linear_func)
-    array([[0.1, -0.03], [-0.03, 0.01]])
-    '''
-    ux = cal_data[:, 1]
-    y = cal_data[:, 2]
-    uy = cal_data[:, 3]
-    f = func(y, b)
-    dg_dx = -1
-    dg_dy = f[1]
-    ug = np.sqrt((dg_dx*ux)**2 + (dg_dy*uy)**2)
-    dh_db = np.array([dg_dbi/ug for dg_dbi in f[2]]).T
-    db_dh = np.linalg.pinv(dh_db)
-    dh_dx_ux = dg_dx/ug*ux
-    dh_dy_uy = dg_dy/ug*uy
-    dh_dx_ux_and_dh_dy_uy = np.concatenate((np.diag(dh_dx_ux), np.diag(dh_dy_uy)), axis=1)
-    j = np.dot(db_dh, dh_dx_ux_and_dh_dy_uy)
-    cv = np.dot(j, j.T)
-    return cv
 
 def b_least_start(cal_data, func):
     '''
@@ -319,22 +200,20 @@ def b_least_start(cal_data, func):
         raise ValueError('Unknown fit function')
     return b_start
 
-def _b_residuals1(params, cal_data, b_scale, func):
-    b = params*b_scale
-    f = b_objective_func1c(cal_data, b, func)
-    #print(np.sum(f*f))
-    return f
-
-def _b_residuals2(params, cal_data, y2_b_scale, func):
+def _b_residuals(params, cal_data, y2_b_scale, func):
     n = cal_data.shape[0]
+    x = cal_data[:, 0]
+    ux = cal_data[:, 1]
+    y = cal_data[:, 2]
+    uy = cal_data[:, 3]
     y2_b = params*y2_b_scale
     y2 = y2_b[:n]
     b = y2_b[n:]
-    f = b_objective_func2c(cal_data, y2, b, func)
+    f = b_objective_func(x, ux, y, uy, y2, b, func)
     #print(np.sum(f*f))
     return f
 
-def _b_jacobian2(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
+def _b_jacobian(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
     n = cal_data.shape[0]
     nb = y2_b_scale.shape[0] - n
     y2_b = params*y2_b_scale
@@ -357,6 +236,23 @@ def _b_jacobian2(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
         # Weighted y
         jacobi[n+i, i] = dy2_dy2 * y2_scale[i] / uy[i]
     return jacobi
+
+def _b_covariance(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
+    n = cal_data.shape[0]
+    b_scale = y2_b_scale[n:]
+    dg_dy2_and_db = _b_jacobian(params, cal_data, y2_b_scale, func)
+    dy2_and_db_dg = np.linalg.pinv(dg_dy2_and_db)
+    db_dg = dy2_and_db_dg[n:, :]
+    # dg_dx_ux_and_dy_uy is a negative identity matrix
+    #ux = cal_data[:, 1]
+    #uy = cal_data[:, 3]
+    #dg_dx = -1 / ux
+    #dg_dy = -1 / uy
+    #dg_dx_ux_and_dy_uy = np.diag(np.concatenate((dg_dx * ux, dg_dy * uy)))
+    db_dx_ux_and_dy_uy = -db_dg #np.dot(db_dg, dg_dx_ux_and_dy_uy)
+    j = np.dot(np.diag(b_scale), db_dx_ux_and_dy_uy)
+    cv = np.dot(j, j.T)
+    return cv
 
 def b_least(cal_data, func):
     '''
@@ -384,14 +280,13 @@ def b_least(cal_data, func):
     y2_b_scale = np.copy(y2_b_start)
     y2_b_scale[y2_b_scale == 0] = 1
     y2_b_start2 = y2_b_start/y2_b_scale
-    y2_b_lm = least_squares(_b_residuals2, y2_b_start2,
-                            jac=_b_jacobian2, args=(cal_data, y2_b_scale, func),
+    y2_b_lm = least_squares(_b_residuals, y2_b_start2,
+                            jac=_b_jacobian, args=(cal_data, y2_b_scale, func),
                             method='lm')
     y2_b_opt = y2_b_lm.x*y2_b_scale
-    y_opt = y2_b_opt[:n]
     b_opt = y2_b_opt[n:]
-    b_opt_cov = b_covariance(cal_data, b_opt, func)
-    b_res = b_objective_func2c(cal_data, y_opt, b_opt, func)
+    b_opt_cov = _b_covariance(y2_b_lm.x, cal_data, y2_b_scale, func)
+    b_res = _b_residuals(y2_b_lm.x, cal_data, y2_b_scale, func)
     return b_opt, b_opt_cov, b_res
 
 def b_eval(meas_data, b, b_cov, func):
@@ -688,7 +583,7 @@ def b_least_mc(cal_samples, func):  # pylint: disable=R0914
     for i in range(nsamples):
         cal_data_i[:, 0] = cal_samples[i, :, 0]
         cal_data_i[:, 2] = cal_samples[i, :, 1]
-        y2_b_i_lm = least_squares(_b_residuals2, y2_b_start2, args=(cal_data_i, y2_b_scale, func),
+        y2_b_i_lm = least_squares(_b_residuals, y2_b_start2, args=(cal_data_i, y2_b_scale, func),
                                   method='lm')
         y2_b_opt_i = y2_b_i_lm.x*y2_b_scale
         b_opt_i = y2_b_opt_i[n:]
