@@ -186,13 +186,14 @@ def b_objective_func2c(cal_data, y2, b, func):
     h = b_objective_func2(x, ux, y, uy, y2, b, func)
     return h
 
-def b_covariance(cal_data, b, func):  # pylint: disable=R0914
+def b_covariance(cal_data, y2, b, func):  # pylint: disable=R0914
     '''
     Computes the covariance matrix of the coefficients for the given
     calibration data and fit function.
 
     Parameters:
     cal_data (numpy.ndarray): A 2D array containing the calibration data.
+    y2 (numpy.ndarray): A 1D array containing the y2 values.
     b (numpy.ndarray): A 1D array containing the coefficients b.
     func (callable): The fit function.
 
@@ -201,14 +202,14 @@ def b_covariance(cal_data, b, func):  # pylint: disable=R0914
 
     Example:
     >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
+    >>> y2 = np.array([2., 4.])
     >>> b = np.array([0., 0.5])
-    >>> b_covariance(cal_data, b, b_linear_func)
+    >>> b_covariance(cal_data, y2, b, b_linear_func)
     array([[0.1, -0.03], [-0.03, 0.01]])
     '''
     ux = cal_data[:, 1]
-    y = cal_data[:, 2]
     uy = cal_data[:, 3]
-    f = func(y, b)
+    f = func(y2, b)
     dg_dx = -1
     dg_dy = f[1]
     ug = np.sqrt((dg_dx*ux)**2 + (dg_dy*uy)**2)
@@ -327,7 +328,7 @@ def b_least(cal_data, func):
     y2_b_opt = y2_b_lm.x*y2_b_scale
     y_opt = y2_b_opt[:n]
     b_opt = y2_b_opt[n:]
-    b_opt_cov = b_covariance(cal_data, b_opt, func)
+    b_opt_cov = b_covariance(cal_data, y_opt, b_opt, func)
     b_res = b_objective_func2c(cal_data, y_opt, b_opt, func)
     return b_opt, b_opt_cov, b_res
 
