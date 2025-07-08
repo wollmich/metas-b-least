@@ -1,5 +1,5 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 29.11.2024
+# Michael Wollensack METAS - 24.10.2024 - 08.07.2025
 
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-class-docstring
@@ -22,11 +22,11 @@ def test_example_1():
     # slope b1
     assert b[1] == approx(2.4612e1, abs=0.0001e1)
     # standard uncertainty of the intercept
-    assert np.sqrt(b_cov[0, 0]) == approx(1.5716e-1, abs=0.0005e-1) # 1.5711e-1
+    assert np.sqrt(b_cov[0, 0]) == approx(1.5716e-1, abs=0.0003e-1) # 1.5713e-1
     # standard uncertainty of the slope
-    assert np.sqrt(b_cov[1, 1]) == approx(4.8048e-1, abs=0.0022e-1) # 4.8026e-1
+    assert np.sqrt(b_cov[1, 1]) == approx(4.8048e-1, abs=0.0013e-1) # 4.8035e-1
     # covariance between intercept and slope
-    assert b_cov[0, 1] == approx(-5.6921e-2, abs=0.00520e-2) # 5.6869e-2
+    assert b_cov[0, 1] == approx(-5.6921e-2, abs=0.00031e-2) # -5.6890e-2
     # residual
     assert np.sum(b_res*b_res) == approx(0.6743, abs=0.0001)
     # goodness of fit
@@ -36,10 +36,10 @@ def test_example_1():
     assert np.sqrt(x_cov[0, 0]) == approx(1.6377e-1, abs=0.0001e-1)
     # mixture no 2
     assert x[1] == approx(1.4409e1, abs=0.0001e1)
-    assert np.sqrt(x_cov[1, 1]) == approx(3.5599e-1, abs=0.0005e-1) # 3.5594e-1
+    assert np.sqrt(x_cov[1, 1]) == approx(3.5599e-1, abs=0.0003e-1) # 3.5597e-1
     # mixture no 3
     assert x[2] == approx(4.3943e1, abs=0.0001e1)
-    assert np.sqrt(x_cov[2, 2]) == approx(1.1631, abs=0.0003) # 1.1628
+    assert np.sqrt(x_cov[2, 2]) == approx(1.1631, abs=0.0002) # 1.1630
     # covariance between values for mixtures 1 and 2
     assert x_cov[0, 1] == approx(1.16e-2, abs=0.01e-2)
     # covariance between values for mixtures 1 and 3
