@@ -186,7 +186,7 @@ def b_objective_func2c(cal_data, y2, b, func):
     h = b_objective_func2(x, ux, y, uy, y2, b, func)
     return h
 
-def b_covariance(cal_data, y2, b, func):  # pylint: disable=R0914
+def b_covariance(cal_data, y2, b, y2_b_scale, func):  # pylint: disable=R0914
     '''
     Computes the covariance matrix of the coefficients for the given
     calibration data and fit function.
@@ -195,6 +195,7 @@ def b_covariance(cal_data, y2, b, func):  # pylint: disable=R0914
     cal_data (numpy.ndarray): A 2D array containing the calibration data.
     y2 (numpy.ndarray): A 1D array containing the y2 values.
     b (numpy.ndarray): A 1D array containing the coefficients b.
+    y2_b_scale (numpy.ndarray): A 1D array containing the y2 and b scales.
     func (callable): The fit function.
 
     Returns:
@@ -204,7 +205,8 @@ def b_covariance(cal_data, y2, b, func):  # pylint: disable=R0914
     >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
     >>> y2 = np.array([2., 4.])
     >>> b = np.array([0., 0.5])
-    >>> b_covariance(cal_data, y2, b, b_linear_func)
+    >>> y2_b_scale = np.array([1., 1., 1., 1.])
+    >>> b_covariance(cal_data, y2, b, y2_b_scale, b_linear_func)
     array([[0.1, -0.03], [-0.03, 0.01]])
     '''
     #x = cal_data[:, 0]
@@ -213,6 +215,8 @@ def b_covariance(cal_data, y2, b, func):  # pylint: disable=R0914
     uy = cal_data[:, 3]
     n = y2.shape[0]
     nb = b.shape[0]
+    y2_scale = y2_b_scale[:n]
+    b_scale = y2_b_scale[n:]
     f = func(y2, b)
     #x2 = f[0]
     #wdx = (x2 - x)/ux
@@ -227,14 +231,15 @@ def b_covariance(cal_data, y2, b, func):  # pylint: disable=R0914
     dg_dy2_and_db = np.zeros((2*n, n + nb))
     for i in range(n):
         # Weighted x
-        dg_dy2_and_db[i, i] = dx2_dy2[i] / ux[i]
+        dg_dy2_and_db[i, i] = dx2_dy2[i] * y2_scale[i] / ux[i]
         for j in range(nb):
-            dg_dy2_and_db[i, n+j] = dx2_db[j][i] / ux[i]
+            dg_dy2_and_db[i, n+j] = dx2_db[j][i] * b_scale[j] / ux[i]
         # Weighted y
-        dg_dy2_and_db[n+i, i] = dy2_dy2  / uy[i]
+        dg_dy2_and_db[n+i, i] = dy2_dy2 * y2_scale[i]  / uy[i]
     dy2_and_db_dg = np.linalg.pinv(dg_dy2_and_db)
     db_dg = dy2_and_db_dg[n:, :]
-    j = np.dot(db_dg, dg_dx_ux_and_dy_uy)
+    db_dx_ux_and_dy_uy = np.dot(db_dg, dg_dx_ux_and_dy_uy)
+    j = np.dot(np.diag(b_scale), db_dx_ux_and_dy_uy)
     cv = np.dot(j, j.T)
     return cv
 
@@ -344,7 +349,7 @@ def b_least(cal_data, func):
     y2_b_opt = y2_b_lm.x*y2_b_scale
     y_opt = y2_b_opt[:n]
     b_opt = y2_b_opt[n:]
-    b_opt_cov = b_covariance(cal_data, y_opt, b_opt, func)
+    b_opt_cov = b_covariance(cal_data, y_opt, b_opt, y2_b_scale, func)
     b_res = b_objective_func2c(cal_data, y_opt, b_opt, func)
     return b_opt, b_opt_cov, b_res
 
