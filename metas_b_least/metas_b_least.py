@@ -126,7 +126,7 @@ def b_exp_func(y, b):
     dx_db = [dx_db0, dx_db1, dx_db2]
     return [x, dx_dy, dx_db]
 
-def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R0917
+def b_objective_func(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R0917
     '''
     Computes the residuals for the x and y values and fit function
 
@@ -149,7 +149,7 @@ def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R091
     >>> uy = np.array([0.2, 0.2])
     >>> y2 = np.array([2., 4.])
     >>> b = np.array([0., 0.5])
-    >>> b_objective_func2(x, ux, y, uy, y2, b, b_linear_func)
+    >>> b_objective_func(x, ux, y, uy, y2, b, b_linear_func)
     array([0., 0., 0., 0.])
     '''
     f = func(y2, b)
@@ -158,33 +158,6 @@ def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R091
     wdy = (y2 - y)/uy
     g = np.concatenate((wdx, wdy))
     return g
-
-def b_objective_func2c(cal_data, y2, b, func):
-    '''
-    Computes the residuals for the given calibration data and fit function
-
-    Parameters:
-    cal_data (numpy.ndarray): A 2D array containing the calibration data.
-    y2 (numpy.ndarray): A 1D array containing the y2 values.
-    b (numpy.ndarray): A 1D array containing the coefficients b.
-    func (callable): The fit function.
-
-    Returns:
-    numpy.ndarray: The residuals.
-
-    Example:
-    >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
-    >>> y2 = np.array([2., 4.])
-    >>> b = np.array([0., 0.5])
-    >>> b_objective_func2c(cal_data, y2, b, b_linear_func)
-    array([0., 0., 0., 0.])
-    '''
-    x = cal_data[:, 0]
-    ux = cal_data[:, 1]
-    y = cal_data[:, 2]
-    uy = cal_data[:, 3]
-    h = b_objective_func2(x, ux, y, uy, y2, b, func)
-    return h
 
 def b_least_start(cal_data, func):
     '''
@@ -229,10 +202,14 @@ def b_least_start(cal_data, func):
 
 def _b_residuals(params, cal_data, y2_b_scale, func):
     n = cal_data.shape[0]
+    x = cal_data[:, 0]
+    ux = cal_data[:, 1]
+    y = cal_data[:, 2]
+    uy = cal_data[:, 3]
     y2_b = params*y2_b_scale
     y2 = y2_b[:n]
     b = y2_b[n:]
-    f = b_objective_func2c(cal_data, y2, b, func)
+    f = b_objective_func(x, ux, y, uy, y2, b, func)
     #print(np.sum(f*f))
     return f
 
@@ -307,10 +284,9 @@ def b_least(cal_data, func):
                             jac=_b_jacobian, args=(cal_data, y2_b_scale, func),
                             method='lm')
     y2_b_opt = y2_b_lm.x*y2_b_scale
-    y_opt = y2_b_opt[:n]
     b_opt = y2_b_opt[n:]
     b_opt_cov = _b_covariance(y2_b_lm.x, cal_data, y2_b_scale, func)
-    b_res = b_objective_func2c(cal_data, y_opt, b_opt, func)
+    b_res = _b_residuals(y2_b_lm.x, cal_data, y2_b_scale, func)
     return b_opt, b_opt_cov, b_res
 
 def b_eval(meas_data, b, b_cov, func):
