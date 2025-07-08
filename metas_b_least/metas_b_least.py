@@ -1,5 +1,5 @@
 # B_LEAST ISO 6143:2001
-# Michael Wollensack METAS - 24.10.2024 - 28.03.2025
+# Michael Wollensack METAS - 24.10.2024 - 08.07.2025
 
 """
 METAS B LEAST is a Python implementation of the B LEAST program of the ISO 6143:2001 norm.
@@ -125,63 +125,6 @@ def b_exp_func(y, b):
     dx_db2 = b[1]*y*np.exp(b[2]*y)
     dx_db = [dx_db0, dx_db1, dx_db2]
     return [x, dx_dy, dx_db]
-
-def b_objective_func1(x, ux, y, uy, b, func):  # pylint: disable=R0913, R0917
-    '''
-    Computes the residuals for the x and y values and fit function
-
-    Parameters:
-    x (numpy.ndarray): A 1D array containing the x values.
-    ux (numpy.ndarray): A 1D array containing the standard uncertainties of x.
-    y (numpy.ndarray): A 1D array containing the y values.
-    uy (numpy.ndarray): A 1D array containing the standard uncertainties of y.
-    b (numpy.ndarray): A 1D array containing the coefficients b.
-    func (callable): The fit function.
-
-    Returns:
-    numpy.ndarray: The residuals.
-
-    Example:
-    >>> x = np.array([1., 2.])
-    >>> ux = np.array([0.1, 0.1])
-    >>> y = np.array([2., 4.])
-    >>> uy = np.array([0.2, 0.2])
-    >>> b = np.array([0., 0.5])
-    >>> b_objective_func1(x, ux, y, uy, b, b_linear_func)
-    array([0., 0.])
-    '''
-    f = func(y, b)
-    g = f[0] - x
-    dg_dx = -1
-    dg_dy = f[1]
-    ug = np.sqrt((dg_dx*ux)**2 + (dg_dy*uy)**2)
-    h = g/ug
-    return h
-
-def b_objective_func1c(cal_data, b, func):
-    '''
-    Computes the residuals for the given calibration data and fit function
-
-    Parameters:
-    cal_data (numpy.ndarray): A 2D array containing the calibration data.
-    b (numpy.ndarray): A 1D array containing the coefficients b.
-    func (callable): The fit function.
-
-    Returns:
-    numpy.ndarray: The residuals.
-
-    Example:
-    >>> cal_data = np.array([[1, 0.1, 2, 0.2], [2, 0.1, 4, 0.2]])
-    >>> b = np.array([0., 0.5])
-    >>> b_objective_func1c(cal_data, b, b_linear_func)
-    array([0., 0.])
-    '''
-    x = cal_data[:, 0]
-    ux = cal_data[:, 1]
-    y = cal_data[:, 2]
-    uy = cal_data[:, 3]
-    h = b_objective_func1(x, ux, y, uy, b, func)
-    return h
 
 def b_objective_func2(x, ux, y, uy, y2, b, func):  # pylint: disable=R0913, R0917
     '''
@@ -318,12 +261,6 @@ def b_least_start(cal_data, func):
     else:
         raise ValueError('Unknown fit function')
     return b_start
-
-def _b_residuals1(params, cal_data, b_scale, func):
-    b = params*b_scale
-    f = b_objective_func1c(cal_data, b, func)
-    #print(np.sum(f*f))
-    return f
 
 def _b_residuals2(params, cal_data, y2_b_scale, func):
     n = cal_data.shape[0]
