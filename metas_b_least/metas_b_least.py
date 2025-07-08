@@ -227,7 +227,7 @@ def b_least_start(cal_data, func):
         raise ValueError('Unknown fit function')
     return b_start
 
-def _b_residuals2(params, cal_data, y2_b_scale, func):
+def _b_residuals(params, cal_data, y2_b_scale, func):
     n = cal_data.shape[0]
     y2_b = params*y2_b_scale
     y2 = y2_b[:n]
@@ -236,7 +236,7 @@ def _b_residuals2(params, cal_data, y2_b_scale, func):
     #print(np.sum(f*f))
     return f
 
-def _b_jacobian2(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
+def _b_jacobian(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
     n = cal_data.shape[0]
     nb = y2_b_scale.shape[0] - n
     y2_b = params*y2_b_scale
@@ -263,7 +263,7 @@ def _b_jacobian2(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
 def _b_covariance(params, cal_data, y2_b_scale, func):  # pylint: disable=R0914
     n = cal_data.shape[0]
     b_scale = y2_b_scale[n:]
-    dg_dy2_and_db = _b_jacobian2(params, cal_data, y2_b_scale, func)
+    dg_dy2_and_db = _b_jacobian(params, cal_data, y2_b_scale, func)
     dy2_and_db_dg = np.linalg.pinv(dg_dy2_and_db)
     db_dg = dy2_and_db_dg[n:, :]
     # dg_dx_ux_and_dy_uy is a negative identity matrix
@@ -303,8 +303,8 @@ def b_least(cal_data, func):
     y2_b_scale = np.copy(y2_b_start)
     y2_b_scale[y2_b_scale == 0] = 1
     y2_b_start2 = y2_b_start/y2_b_scale
-    y2_b_lm = least_squares(_b_residuals2, y2_b_start2,
-                            jac=_b_jacobian2, args=(cal_data, y2_b_scale, func),
+    y2_b_lm = least_squares(_b_residuals, y2_b_start2,
+                            jac=_b_jacobian, args=(cal_data, y2_b_scale, func),
                             method='lm')
     y2_b_opt = y2_b_lm.x*y2_b_scale
     y_opt = y2_b_opt[:n]
@@ -607,7 +607,7 @@ def b_least_mc(cal_samples, func):  # pylint: disable=R0914
     for i in range(nsamples):
         cal_data_i[:, 0] = cal_samples[i, :, 0]
         cal_data_i[:, 2] = cal_samples[i, :, 1]
-        y2_b_i_lm = least_squares(_b_residuals2, y2_b_start2, args=(cal_data_i, y2_b_scale, func),
+        y2_b_i_lm = least_squares(_b_residuals, y2_b_start2, args=(cal_data_i, y2_b_scale, func),
                                   method='lm')
         y2_b_opt_i = y2_b_i_lm.x*y2_b_scale
         b_opt_i = y2_b_opt_i[n:]
@@ -811,9 +811,9 @@ def b_example_mc_3():
     b_test_mc(cal_data, meas_data, b_exp_func)
 
 if __name__ == "__main__":
-    #b_example_1()
-    #b_example_2()
+    b_example_1()
+    b_example_2()
     b_example_3()
-    #b_example_mc_1()
-    #b_example_mc_2()
-    #b_example_mc_3()
+    b_example_mc_1()
+    b_example_mc_2()
+    b_example_mc_3()
