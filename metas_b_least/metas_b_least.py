@@ -207,18 +207,34 @@ def b_covariance(cal_data, y2, b, func):  # pylint: disable=R0914
     >>> b_covariance(cal_data, y2, b, b_linear_func)
     array([[0.1, -0.03], [-0.03, 0.01]])
     '''
+    #x = cal_data[:, 0]
     ux = cal_data[:, 1]
+    #y = cal_data[:, 2]
     uy = cal_data[:, 3]
+    n = y2.shape[0]
+    nb = b.shape[0]
     f = func(y2, b)
-    dg_dx = -1
-    dg_dy = f[1]
-    ug = np.sqrt((dg_dx*ux)**2 + (dg_dy*uy)**2)
-    dh_db = np.array([dg_dbi/ug for dg_dbi in f[2]]).T
-    db_dh = np.linalg.pinv(dh_db)
-    dh_dx_ux = dg_dx/ug*ux
-    dh_dy_uy = dg_dy/ug*uy
-    dh_dx_ux_and_dh_dy_uy = np.concatenate((np.diag(dh_dx_ux), np.diag(dh_dy_uy)), axis=1)
-    j = np.dot(db_dh, dh_dx_ux_and_dh_dy_uy)
+    #x2 = f[0]
+    #wdx = (x2 - x)/ux
+    #wdy = (y2 - y)/uy
+    #g = np.concatenate((wdx, wdy))
+    dg_dx = -1 / ux
+    dg_dy = -1 / uy
+    dg_dx_ux_and_dy_uy = np.diag(np.concatenate((dg_dx * ux, dg_dy * uy)))
+    dx2_dy2 = f[1]
+    dx2_db = f[2]
+    dy2_dy2 = 1
+    dg_dy2_and_db = np.zeros((2*n, n + nb))
+    for i in range(n):
+        # Weighted x
+        dg_dy2_and_db[i, i] = dx2_dy2[i] / ux[i]
+        for j in range(nb):
+            dg_dy2_and_db[i, n+j] = dx2_db[j][i] / ux[i]
+        # Weighted y
+        dg_dy2_and_db[n+i, i] = dy2_dy2  / uy[i]
+    dy2_and_db_dg = np.linalg.pinv(dg_dy2_and_db)
+    db_dg = dy2_and_db_dg[n:, :]
+    j = np.dot(db_dg, dg_dx_ux_and_dy_uy)
     cv = np.dot(j, j.T)
     return cv
 
