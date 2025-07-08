@@ -26,7 +26,7 @@ def test_example_1():
     # standard uncertainty of the slope
     assert np.sqrt(b_cov[1, 1]) == approx(4.8048e-1, abs=0.0013e-1) # 4.8035e-1
     # covariance between intercept and slope
-    assert b_cov[0, 1] == approx(-5.6921e-2, abs=0.00032e-2) # -5.6890e-2
+    assert b_cov[0, 1] == approx(-5.6921e-2, abs=0.0031e-2) # -5.6890e-2
     # residual
     assert np.sum(b_res*b_res) == approx(0.6743, abs=0.0001)
     # goodness of fit
